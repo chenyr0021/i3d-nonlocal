@@ -220,7 +220,7 @@ class InceptionI3d(nn.Module):
         self.end_points = {}
         end_point = 'Conv3d_1a_7x7'
         self.end_points[end_point] = Unit3D(in_channels=in_channels, output_channels=64, kernel_shape=[7, 7, 7],
-                                            stride=(2, 2, 2), padding=(3,3,3),  name=name+end_point)
+                                            stride=(2, 2, 2), padding=3,  name=name+end_point)
         if self._final_endpoint == end_point: return
         
         end_point = 'MaxPool3d_2a_3x3'
@@ -300,7 +300,6 @@ class InceptionI3d(nn.Module):
                              use_batch_norm=False,
                              use_bias=True,
                              name='logits')
-
         self.build()
 
 

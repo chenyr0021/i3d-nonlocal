@@ -27,8 +27,18 @@ def video_to_tensor(pic):
 
 def load_rgb_frames(image_dir, vid, start, num):
   frames = []
-  for i in range(start, start+num):
-    img = cv2.imread(os.path.join(image_dir, vid, vid+'-'+str(i).zfill(6)+'.jpg'))[:, :, [2, 1, 0]]
+  if len(os.listdir(image_dir)) < num:
+      print('Image frames in {} not enough.'.format(image_dir))
+      exit()
+  i = start
+  while len(frames) < num:
+    img_path = os.path.join(image_dir, vid, vid+'-'+str(i).zfill(6)+'.jpg')
+    # 如果图片不存在（数据集不完整），就跳过
+    if not os.path.exists(img_path):
+        i += 1
+        continue
+
+    img = cv2.imread(img_path)[:, :, [2, 1, 0]]
     w,h,c = img.shape
     if w < 226 or h < 226:
         d = 226.-min(w,h)
@@ -36,6 +46,7 @@ def load_rgb_frames(image_dir, vid, start, num):
         img = cv2.resize(img,dsize=(0,0),fx=sc,fy=sc)
     img = (img/255.)*2 - 1
     frames.append(img)
+    i += 1
   return np.asarray(frames, dtype=np.float32)
 
 def load_flow_frames(image_dir, vid, start, num):
@@ -86,7 +97,6 @@ def make_dataset(split_file, split, root, mode, num_classes=157):
                     label[ann[0], fr] = 1 # binary classification
         dataset.append((vid, label, data[vid]['duration'], num_frames))
         i += 1
-    
     return dataset
 
 
@@ -119,7 +129,7 @@ class Charades(data_utl.Dataset):
 
         imgs = self.transforms(imgs)
 
-        return video_to_tensor(imgs), torch.from_numpy(label)
+        return vid, video_to_tensor(imgs), torch.from_numpy(label)
 
     def __len__(self):
         return len(self.data)
